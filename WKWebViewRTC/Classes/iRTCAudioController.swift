@@ -15,12 +15,19 @@ class iRTCAudioController {
 	
 	static private var audioCategory : AVAudioSession.Category = AVAudioSession.Category.playAndRecord
 
-	static private var audioCategoryOptions : AVAudioSession.CategoryOptions = [
-		AVAudioSession.CategoryOptions.mixWithOthers,
-		AVAudioSession.CategoryOptions.allowBluetooth,
-		AVAudioSession.CategoryOptions.allowAirPlay,
-		AVAudioSession.CategoryOptions.allowBluetoothA2DP
-	]
+    static private var audioCategoryOptions : AVAudioSession.CategoryOptions = {
+        var options: [AVAudioSession.CategoryOptions] = [
+            AVAudioSession.CategoryOptions.mixWithOthers,
+            AVAudioSession.CategoryOptions.allowBluetooth
+        ]
+        
+        if #available(iOS 10.0, *) {
+            options.insert(AVAudioSession.CategoryOptions.allowAirPlay)
+            options.insert(AVAudioSession.CategoryOptions.allowBluetoothA2DP)
+        }
+        return options
+    }()
+
 
 	/*
 	 This mode is intended for Voice over IP (VoIP) apps and can only be used with the playAndRecord category. When this mode is used, the device’s tonal equalization is optimized for voice and the set of allowable audio routes is reduced to only those appropriate for voice chat.
@@ -53,12 +60,14 @@ class iRTCAudioController {
 		NSLog("iRTCAudioController#setCategory()")
 		
 		do {
-			let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
-			try audioSession.setCategory(
-				iRTCAudioController.audioCategory,
-				mode: iRTCAudioController.audioMode,
-				options: iRTCAudioController.audioCategoryOptions
-			)
+            if #available(iOS 10.0, *) {
+                let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
+                try audioSession.setCategory(
+                    iRTCAudioController.audioCategory,
+                    mode: iRTCAudioController.audioMode,
+                    options: iRTCAudioController.audioCategoryOptions
+                )
+            }
 		} catch {
 			NSLog("iRTCAudioController#setCategory() | ERROR \(error)")
 		};

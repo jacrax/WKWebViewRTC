@@ -60,70 +60,78 @@ class iEnumerateDevices {
 fileprivate func getAllVideoDevices() -> [MediaDeviceInfo] {
 	
 	var videoDevicesArr : [MediaDeviceInfo] = []
-	var deviceTypes: [AVCaptureDevice.DeviceType] = [.builtInTelephotoCamera, .builtInWideAngleCamera]
+    var devicesTypes: [Any] = [Any]()
+    
+    if #available(iOS 10.0, *) {
+        devicesTypes = [AVCaptureDevice.DeviceType.builtInTelephotoCamera, AVCaptureDevice.DeviceType.builtInWideAngleCamera]
+    }
+    
 	if #available(iOS 10.2, *) {
-		deviceTypes.append(.builtInDualCamera)
+		deviceTypes.append(AVCaptureDevice.DeviceType.builtInDualCamera)
 
 		// Disabled tp prevent duplicate front camera
 		//if #available(iOS 11.1, *) {
 		//	deviceTypes.append(.builtInTrueDepthCamera)
 		//}
 	}
+    
+    if #available(iOS 10.0, *) {
+        guard let deviceTyp = devicesTypes as? [AVCaptureDevice.DeviceType] else { return videoDevicesArr }
+        let videoDevices: [AVCaptureDevice] = AVCaptureDevice.DiscoverySession.init(
+            deviceTypes: deviceTypes,
+            mediaType: AVMediaType.video,
+            position: AVCaptureDevice.Position.unspecified
+        ).devices
+        
+        for device: AVCaptureDevice in videoDevices {
+            var facing: String
+            var facingLabel: String;
+            let hasAudio = device.hasMediaType(AVMediaType(rawValue: convertFromAVMediaType(AVMediaType.audio)))
+            let hasVideo = device.hasMediaType(AVMediaType(rawValue: convertFromAVMediaType(AVMediaType.video)))
+            
+            switch device.position {
+            case AVCaptureDevice.Position.unspecified:
+                facing = "unknown"
+                facingLabel = "";
+            case AVCaptureDevice.Position.back:
+                facing = "back"
+                facingLabel = "Back Camera"
+            case AVCaptureDevice.Position.front:
+                facing = "front"
+                facingLabel = "Front Camera"
+            }
+            
+            if device.isConnected == false || (hasAudio == false && hasVideo == false) {
+                continue
+            }
+            
+            NSLog("- device [uniqueID:'%@', localizedName:'%@', facing:%@, audio:%@, video:%@, connected:%@]",
+                String(device.uniqueID), String(device.localizedName), String(facing),
+                String(hasAudio), String(hasVideo), String(device.isConnected))
+            
+            if hasAudio == false {
+                // Add English facingLabel suffix if localizedName does not match for facing detection using label
+                let deviceLabel = device.localizedName.contains(facingLabel) ?
+                        device.localizedName : device.localizedName + " (" + facingLabel + ")";
+                
+                let device = MediaDeviceInfo(
+                    deviceId: device.uniqueID,
+                    kind: "videoinput",
+                    label: deviceLabel
+                )
+                    
+                // Put Front devices at beginning of the videoDevicesArr
+                if (facing == "front") {
+                    // Simple Swift 4 array unshift
+                    let videoDevicesArrFirst : [MediaDeviceInfo] = [device]
+                    videoDevicesArr = videoDevicesArrFirst + videoDevicesArr;
+                } else {
+                    videoDevicesArr.append(device)
+                }
+            }
+        }
+    }
 
-	let videoDevices: [AVCaptureDevice] = AVCaptureDevice.DiscoverySession.init(
-		deviceTypes: deviceTypes,
-		mediaType: AVMediaType.video,
-		position: AVCaptureDevice.Position.unspecified
-	).devices
-	
-	for device: AVCaptureDevice in videoDevices {
-		var facing: String
-		var facingLabel: String;
-		let hasAudio = device.hasMediaType(AVMediaType(rawValue: convertFromAVMediaType(AVMediaType.audio)))
-		let hasVideo = device.hasMediaType(AVMediaType(rawValue: convertFromAVMediaType(AVMediaType.video)))
-		
-		switch device.position {
-		case AVCaptureDevice.Position.unspecified:
-			facing = "unknown"
-			facingLabel = "";
-		case AVCaptureDevice.Position.back:
-			facing = "back"
-			facingLabel = "Back Camera"
-		case AVCaptureDevice.Position.front:
-			facing = "front"
-			facingLabel = "Front Camera"
-		}
-		
-		if device.isConnected == false || (hasAudio == false && hasVideo == false) {
-			continue
-		}
-		
-		NSLog("- device [uniqueID:'%@', localizedName:'%@', facing:%@, audio:%@, video:%@, connected:%@]",
-			String(device.uniqueID), String(device.localizedName), String(facing),
-			String(hasAudio), String(hasVideo), String(device.isConnected))
-		
-		if hasAudio == false {
-			// Add English facingLabel suffix if localizedName does not match for facing detection using label
-			let deviceLabel = device.localizedName.contains(facingLabel) ?
-					device.localizedName : device.localizedName + " (" + facingLabel + ")";
-			
-			let device = MediaDeviceInfo(
-				deviceId: device.uniqueID,
-				kind: "videoinput",
-				label: deviceLabel
-			)
-				
-			// Put Front devices at beginning of the videoDevicesArr
-			if (facing == "front") {
-				// Simple Swift 4 array unshift
-				let videoDevicesArrFirst : [MediaDeviceInfo] = [device]
-				videoDevicesArr = videoDevicesArrFirst + videoDevicesArr;
-			} else {
-				videoDevicesArr.append(device)
-			}
-		}
-	}
-	
 	return videoDevicesArr
 }
 
