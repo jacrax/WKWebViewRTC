@@ -16,7 +16,7 @@ class iRTCAudioController {
 	static private var audioCategory : AVAudioSession.Category = AVAudioSession.Category.playAndRecord
 
     static private var audioCategoryOptions : AVAudioSession.CategoryOptions = {
-        var options: [AVAudioSession.CategoryOptions] = [
+        var options: AVAudioSession.CategoryOptions = [
             AVAudioSession.CategoryOptions.mixWithOthers,
             AVAudioSession.CategoryOptions.allowBluetooth
         ]

@@ -67,7 +67,7 @@ fileprivate func getAllVideoDevices() -> [MediaDeviceInfo] {
     }
     
 	if #available(iOS 10.2, *) {
-		deviceTypes.append(AVCaptureDevice.DeviceType.builtInDualCamera)
+		devicesTypes.append(AVCaptureDevice.DeviceType.builtInDualCamera)
 
 		// Disabled tp prevent duplicate front camera
 		//if #available(iOS 11.1, *) {
@@ -78,7 +78,7 @@ fileprivate func getAllVideoDevices() -> [MediaDeviceInfo] {
     if #available(iOS 10.0, *) {
         guard let deviceTyp = devicesTypes as? [AVCaptureDevice.DeviceType] else { return videoDevicesArr }
         let videoDevices: [AVCaptureDevice] = AVCaptureDevice.DiscoverySession.init(
-            deviceTypes: deviceTypes,
+            deviceTypes: deviceTyp,
             mediaType: AVMediaType.video,
             position: AVCaptureDevice.Position.unspecified
         ).devices
