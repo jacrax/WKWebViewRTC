@@ -32,7 +32,7 @@ Pod::Spec.new do |s|
   s.source_files = 'WKWebViewRTC/Classes/**/*'
 	s.resources = 'WKWebViewRTC/Js/jsWKWebViewRTC.js'
 
-   s.dependency 'GoogleWebRTC', '1.1.29229'
+   s.dependency 'GoogleWebRTC', '1.1.27828'
 
    s.xcconfig       = { 'ENABLE_BITCODE' => 'NO', 'ONLY_ACTIVE_ARCH' => 'Yes' }
 end
